@@ -20,61 +20,40 @@
 
 <body>
 
-  <button id="increaseGravityButton">Increase Gravity -- doesn't work</button>
-  <button id="increaseSpeedButton">Increase Speed -- doesn't work (see comments in html file</button>
-  <button id="decreaseGravityButton">Decrease Gravity -- doesn't work (see comments in html file</button>
-  <p id="infoGravity"></p>
-  <p id="infoSpeed"></p>
+
+  <span id="infoGravity" class="info general"></span>
+  <span id="infoBasicSpeed" class="info general"></span>
+  <span id="infoWheelHZ" class="info wheelspring"></span>
+  <span id="infoWheelZETA" class="info wheelspring"></span>
+  <span id="infoWheelSPEED" class="info wheelspring"></span>
 
   <canvas id="stage"></canvas>
 
   <script src="https://cdn.jsdelivr.net/npm/planck-js@0.1/dist/planck-with-testbed.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue"></script>
   <script>
+    let startGravity = -10; //  original: -10
+    let startSpeed = 1.3;   //  original: 1.3
+    let startWheelHZ = 4.0;      //  original: 4.0
+    let startWheelZETA = 0.7;       // og:  0.7
+    let startWheelSPEED = 50.0;       // og: 50.0
 
 
-    function PostPage(props) {
-      document.getElementById('infoGravity').innerHTML = props;
+    let speakGravity = `Gravity: `+startGravity+` | `;
+    let speakSpeed = `Speed: ` + startSpeed + ` | `;
+    let speakWheelHZ = `Wheel-HZ: ` + startWheelHZ + ` | `;
+    let speakWheelZETA = `Wheel-ZETA: ` + startWheelZETA + ` | `;
+    let speakWheelSPEED = `Wheel-SPEED: ` + startWheelSPEED + ` | `;
+
+
+    function PostPage(props, id) {
+      document.getElementById(id).innerHTML = props;
     }
-
-    var firstNote = `I added the falling blocks to the demo. Cool.`;
-    PostPage(firstNote);
-    var sebsNote = `The handlers for manipulating code are specified in https://github.com/shakiba/planck.js/blob/9d3a52d4a090f2e5a52f89b828ec846e6eae6bc5/lib/World.js and I have yet to hook them up properly. It is not possible to change the variables only (or simply) by changing the variables. Instead there seem to be specific "set" and "get" functions that must be called. Anyway, this is work to be done. -- SF`;
-    // note: the below does not work yet
-    var startGravity = -10;
-    var startSpeed = 1.3;
-    const upGravityElement = document.getElementById('increaseGravityButton');
-    const downGravityElement = document.getElementById('decreaseGravityButton');
-    const upSpeedElement = document.getElementById('increaseSpeedButton');
-
-
-    upGravityElement.addEventListener('click', updateGravity = (event) => {
-      var newGravity = startGravity * 1.1;
-      startGravity = newGravity;
-      PostPage(/*startGravity*/sebsNote);
-    });
-    function PostPage(props) {
-      document.getElementById('infoGravity').innerHTML = props;
-    }
-
-    downGravityElement.addEventListener('click', updateGravity = (event) => {
-      var newGravity = startGravity + 10;
-      startGravity = newGravity;
-      PostPage(/*startGravity*/sebsNote);
-    });
-    function PostPage(props) {
-      document.getElementById('infoGravity').innerHTML = props;
-    }
-
-    upSpeedElement.addEventListener('click', updateSpeed = (event) => {
-      var newSpeed = startSpeed * 1.1;
-      startSpeed = newSpeed;
-      PostPage(/*startSpeed*/sebsNote);
-    });
-    function PostPage(props) {
-      document.getElementById('infoSpeed').innerHTML = props;
-
-    }
+    PostPage(speakGravity, 'infoGravity');
+    PostPage(speakSpeed, 'infoBasicSpeed');
+    PostPage(speakWheelHZ, 'infoWheelHZ');
+    PostPage(speakWheelZETA, 'infoWheelZETA');
+    PostPage(speakWheelSPEED, 'infoWheelSPEED');
 
     // note: the below is part of the original demo (and works) except for the parts indicated, like, the new falling blocks
 
@@ -112,9 +91,9 @@
       });
 
       // wheel spring settings
-      var HZ = 4.0;
-      var ZETA = 0.7;
-      var SPEED = 50.0;
+      var HZ = startWheelHZ;
+      var ZETA = startWheelZETA;
+      var SPEED = startWheelSPEED;
 
       var ground = world.createBody();
 
@@ -159,7 +138,9 @@
 
       // Teeter
       var teeter = world.createDynamicBody(Vec2(140.0, 1.0));
-      teeter.createFixture(pl.Box(10.0, 0.25), 1.0);
+      teeter.createFixture(pl.Box(20.0, 0.25), 1.0);
+      // originally above was:
+      // teeter.createFixture(pl.Box(10.0, 0.25), 1.0);
       world.createJoint(pl.RevoluteJoint({
         lowerAngle: -18.0 * Math.PI / 180.0,
         upperAngle: 45.0 * Math.PI / 180.0,
@@ -170,8 +151,12 @@
 
       // Bridge
       var bridgeFD = {};
-      bridgeFD.density = 1.0;
-      bridgeFD.friction = 0.6;
+      // bridgeFD.density = 1.0; // original
+      bridgeFD.density = 0.5; // very springy
+      // bridgeFD.density = 0.1; // car almost passes through bridge ... like a cloud
+      // bridgeFD.friction = 0.6; // original
+      // bridgeFD.friction = 0.1; // too slippery
+      bridgeFD.friction = 0.6; //
 
       var prevBody = ground;
       for (var i = 0; i < 20; ++i) {
