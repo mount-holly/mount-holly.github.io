@@ -20,9 +20,9 @@
 
 <body>
 
-  <button id="increaseGravityButton">Increase Gravity</button>
-  <button id="increaseSpeedButton">Increase Speed</button>
-  <button id="decreaseGravityButton">Decrease Gravity</button>
+  <button id="increaseGravityButton">Increase Gravity -- doesn't work</button>
+  <button id="increaseSpeedButton">Increase Speed -- doesn't work (see comments in html file</button>
+  <button id="decreaseGravityButton">Decrease Gravity -- doesn't work (see comments in html file</button>
   <p id="infoGravity"></p>
   <p id="infoSpeed"></p>
 
@@ -31,19 +31,27 @@
   <script src="https://cdn.jsdelivr.net/npm/planck-js@0.1/dist/planck-with-testbed.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue"></script>
   <script>
-    /*
-    * Sebastian wrote this ucer-interface stuff. It's super-basic javascript and can be expanded and styled better ....
-    */
+
+
+    function PostPage(props) {
+      document.getElementById('infoGravity').innerHTML = props;
+    }
+
+    var firstNote = `I added the falling blocks to the demo. Cool.`;
+    PostPage(firstNote);
+    var sebsNote = `The handlers for manipulating code are specified in https://github.com/shakiba/planck.js/blob/9d3a52d4a090f2e5a52f89b828ec846e6eae6bc5/lib/World.js and I have yet to hook them up properly. It is not possible to change the variables only (or simply) by changing the variables. Instead there seem to be specific "set" and "get" functions that must be called. Anyway, this is work to be done. -- SF`;
+    // note: the below does not work yet
     var startGravity = -10;
     var startSpeed = 1.3;
     const upGravityElement = document.getElementById('increaseGravityButton');
     const downGravityElement = document.getElementById('decreaseGravityButton');
     const upSpeedElement = document.getElementById('increaseSpeedButton');
-    
+
+
     upGravityElement.addEventListener('click', updateGravity = (event) => {
       var newGravity = startGravity * 1.1;
       startGravity = newGravity;
-      PostPage(startGravity);
+      PostPage(/*startGravity*/sebsNote);
     });
     function PostPage(props) {
       document.getElementById('infoGravity').innerHTML = props;
@@ -52,7 +60,7 @@
     downGravityElement.addEventListener('click', updateGravity = (event) => {
       var newGravity = startGravity + 10;
       startGravity = newGravity;
-      PostPage(startGravity);
+      PostPage(/*startGravity*/sebsNote);
     });
     function PostPage(props) {
       document.getElementById('infoGravity').innerHTML = props;
@@ -61,11 +69,15 @@
     upSpeedElement.addEventListener('click', updateSpeed = (event) => {
       var newSpeed = startSpeed * 1.1;
       startSpeed = newSpeed;
-      PostPage(startSpeed);
+      PostPage(/*startSpeed*/sebsNote);
     });
     function PostPage(props) {
       document.getElementById('infoSpeed').innerHTML = props;
+
     }
+
+    // note: the below is part of the original demo (and works) except for the parts indicated, like, the new falling blocks
+
 
     /*
      * Copyright (c) 2016-2017 Ali Shakiba http://shakiba.me/planck.js
@@ -175,6 +187,12 @@
 
       // Boxes
       var box = pl.Box(0.5, 0.5);
+      var sebbox1 = pl.Box(1.5, 1.5);
+      var sebbox2 = pl.Box(2.5, 2.5);
+      var sebbox3 = pl.Box(3.5, 3.5);
+      var sebbox4 = pl.Box(4.5, 4.5);
+      var sebbox5 = pl.Box(5.5, 5.5);
+      var sebbox10 = pl.Box(10, 10);
 
       world.createDynamicBody(Vec2(230.0, 0.5))
         .createFixture(box, 0.5);
@@ -187,9 +205,57 @@
 
       world.createDynamicBody(Vec2(230.0, 3.5))
         .createFixture(box, 0.5);
-
-      world.createDynamicBody(Vec2(230.0, 4.5))
+/*
+* Sebastian added these blocks below
+*/
+      world.createDynamicBody(Vec2(-5.0, 70.5))
         .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 81.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 83.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 72.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 12.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 90.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 86.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-12.0, 155.5))
+        .createFixture(sebbox10, 10);
+
+      world.createDynamicBody(Vec2(-3.0, 225.5))
+        .createFixture(sebbox2, 0.5);
+
+      world.createDynamicBody(Vec2(-2.0, 250.5))
+        .createFixture(sebbox1, 0.5);
+
+      world.createDynamicBody(Vec2(-1.0, 202.5))
+        .createFixture(sebbox2, 0.5);
+
+      world.createDynamicBody(Vec2(0.0, 303.5))
+        .createFixture(sebbox3, 0.1);
+
+      world.createDynamicBody(Vec2(40.0, 200.5))
+        .createFixture(box, 5.5);
+
+      world.createDynamicBody(Vec2(40.0, 201.5))
+        .createFixture(box, 5.5);
+
+      world.createDynamicBody(Vec2(40.0, 202.5))
+        .createFixture(box, 5.5);
+
+      world.createDynamicBody(Vec2(40.0, 203.5))
+        .createFixture(box, 5.5);
+
 
       // Car
       var car = world.createDynamicBody(Vec2(0.0, 1.0));
