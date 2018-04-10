@@ -31,15 +31,15 @@
   <script src="https://cdn.jsdelivr.net/npm/planck-js@0.1/dist/planck-with-testbed.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue"></script>
   <script>
+    /*
+    * Sebastian wrote this ucer-interface stuff. It's super-basic javascript and can be expanded and styled better ....
+    */
     var startGravity = -10;
     var startSpeed = 1.3;
     const upGravityElement = document.getElementById('increaseGravityButton');
     const downGravityElement = document.getElementById('decreaseGravityButton');
     const upSpeedElement = document.getElementById('increaseSpeedButton');
-
-    // Add a handler for the 'click' event by providing a callback function.
-    // Whenever the element is clicked, a pop-up with "Element clicked!" will
-    // appear.
+    
     upGravityElement.addEventListener('click', updateGravity = (event) => {
       var newGravity = startGravity * 1.1;
       startGravity = newGravity;
@@ -65,26 +65,7 @@
     });
     function PostPage(props) {
       document.getElementById('infoSpeed').innerHTML = props;
-
     }
-
-
-
-
-
-
-    // // For compatibility, a non-function object with a `handleEvent` property is
-    // // treated just the same as a function itself.
-    // buttonElement.addEventListener('click', {
-    //   handleEvent: function (event) {
-    //     alert('Element clicked through handleEvent property!');
-    //   }
-    // });
-    // var gravityButton = element.getElementsByClassName('app');
-    // var gravityClick = () => {
-    //   alert('gravity clicked')
-    // }
-    // gravityButton.onClick = gravityClick;
 
     /*
      * Copyright (c) 2016-2017 Ali Shakiba http://shakiba.me/planck.js
