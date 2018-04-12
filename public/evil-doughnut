@@ -1,0 +1,508 @@
+<html>
+<head>
+  <meta name="viewport" content="width=device-width">
+  <title>Evil Doughnut</title>
+  <style>
+    #app {
+      color: rgb(17, 17, 17);
+      bottom: 0px;
+    }
+
+    #stage {
+      width: 100%;
+      height: 95%;
+      top: 40%;
+      background-color: rgb(34, 34, 34);
+    }
+
+    .version {
+      font-size: 0.5rem;
+    }
+
+    .info {
+      font-size: 0.95rem;
+    }
+
+    .general {
+      color: brown;
+    }
+
+    .wheelspring {
+      color: blue;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- <button id="pause" class="button">pause</button> -->
+  <canvas id="stage"></canvas>
+  <span id="version" class="version">v.0.3</span>
+  <span id="infoInstructions" class="instructions"></span>
+
+  <span id="infoGravity" class="info general"></span>
+  <span id="infoBasicSpeed" class="info general"></span>
+  <span id="infoWheelHZ" class="info wheelspring"></span>
+  <span id="infoWheelZETA" class="info wheelspring"></span>
+  <span id="infoWheelSPEED" class="info wheelspring"></span>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/planck-js@0.1/dist/planck-with-testbed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script>
+    let startGravity = -10; //  original: -10
+    let startSpeed = 1.3;   //  original: 1.3
+    let startWheelHZ = 4.0;      //  original: 4.0
+    let startWheelZETA = 0.7;       // og:  0.7
+    let startWheelSPEED = 50.0;       // og: 50.0
+    let bridgeDensity = 1.0;
+    let bridgeFriction = 0.7;
+    let speakGravity = `Game-Gravity: ` + startGravity + ` | `;
+    let speakSpeed = `Game-Speed: ` + startSpeed + ` | `;
+    let speakWheelHZ = `Wheel-HZ: ` + startWheelHZ + ` | `;
+    let speakWheelZETA = `Wheel-ZETA: ` + startWheelZETA + ` | `;
+    let speakWheelSPEED = `Wheel-SPEED: ` + startWheelSPEED + ` | `;
+    const infoInstructions = '←/→: Accelerate car, ↑/↓: Change spring frequency  |';
+
+    function PostPage(props, id) {
+      document.getElementById(id).innerHTML = props;
+    }
+    PostPage(speakGravity, 'infoGravity');
+    PostPage(speakSpeed, 'infoBasicSpeed');
+    PostPage(speakWheelHZ, 'infoWheelHZ');
+    PostPage(speakWheelZETA, 'infoWheelZETA');
+    PostPage(speakWheelSPEED, 'infoWheelSPEED');
+    PostPage(infoInstructions, 'infoInstructions');
+
+    const pauseButton = document.getElementById('pause');
+
+
+
+
+    // note: the below is part of the original demo (and works) except for the parts indicated, like, the new falling blocks
+
+
+    /*
+    * Copyright (c) 2016-2017 Ali Shakiba http://shakiba.me/planck.js
+    * Copyright (c) 2006-2011 Erin Catto  http://www.box2d.org
+    *
+    * This software is provided 'as-is', without any express or implied
+    * warranty.  In no event will the authors be held liable for any damages
+    * arising from the use of this software.
+    * Permission is granted to anyone to use this software for any purpose,
+    * including commercial applications, and to alter it and redistribute it
+    * freely, subject to the following restrictions:
+    * 1. The origin of this software must not be misrepresented; you must not
+    * claim that you wrote the original software. If you use this software
+    * in a product, an acknowledgment in the product documentation would be
+    * appreciated but is not required.
+    * 2. Altered source versions must be plainly marked as such, and must not be
+    * misrepresented as being the original software.
+    * 3. This notice may not be removed or altered from any source distribution.
+    */
+    // This is a fun demo that shows off the wheel joint
+    planck.testbed('Car', function (testbed) {
+
+      testbed.speed = startSpeed;
+      testbed.hz = 1 / 50;
+
+      testbed.height = 35;
+      testbed.width = 35;
+
+      var pl = planck, Vec2 = pl.Vec2;
+      var world = new pl.World({
+        gravity: Vec2(0, startGravity)
+      });
+
+      // wheel spring settings
+      var HZ = startWheelHZ;
+      var ZETA = startWheelZETA;
+      var SPEED = startWheelSPEED;
+
+      var ground = world.createBody();
+
+      var groundFD = {
+        density: 0.0,
+        friction: 0.6
+      };
+
+      ground.createFixture(pl.Edge(Vec2(-20.0, 0.0), Vec2(20.0, 0.0)), groundFD);
+      ground.createFixture(pl.Edge(Vec2(380.0, 1.0), Vec2(500.0, -1.0)), groundFD);
+
+      var hs = [0.25, 1.0, 4.0, 0.0, 0.0, -1.0, -2.0, -2.0, -1.25, 0.0];
+
+      var x = 20.0, y1 = 0.0, dx = 5.0;
+
+      for (var i = 0; i < 10; ++i) {
+        var y2 = hs[i];
+        ground.createFixture(pl.Edge(Vec2(x, y1), Vec2(x + dx, y2)), groundFD);
+        y1 = y2;
+        x += dx;
+      }
+
+      for (var i = 0; i < 10; ++i) {
+        var y2 = hs[i];
+        ground.createFixture(pl.Edge(Vec2(x, y1), Vec2(x + dx, y2)), groundFD);
+        y1 = y2;
+        x += dx;
+      }
+
+      ground.createFixture(pl.Edge(Vec2(x, 0.0), Vec2(x + 40.0, 0.0)), groundFD);
+
+      x += 80.0;
+      ground.createFixture(pl.Edge(Vec2(x, 0.0), Vec2(x + 40.0, 0.0)), groundFD);
+
+      x += 40.0;
+      ground.createFixture(pl.Edge(Vec2(x, 0.0), Vec2(x, 0.0)), groundFD);
+
+      // x += 20.0;
+      ground.createFixture(pl.Edge(Vec2(x, 0.0), Vec2(x + 40.0, 0.0)), groundFD);
+
+      x += 40.0;
+      console.log(x)
+      ground.createFixture(pl.Edge(Vec2(x, 0.0), Vec2(x + 40, 0.0)), groundFD);
+
+      x += 40.0;
+      console.log(x)
+      ground.createFixture(pl.Edge(Vec2(x, 0.1), Vec2(x + 40, 15.0)), groundFD);
+
+      x += 40.0;
+      //  x * -1;
+      console.log(x)
+      ground.createFixture(pl.Edge(Vec2(x, 1.0), Vec2(x + 40, 0.0)), groundFD);
+
+      ground.createFixture(pl.Edge(Vec2(380, 1.0), Vec2(580, 0.0)), groundFD);
+      // Teeter
+      var teeter = world.createDynamicBody(Vec2(140.0, 1.0));
+      teeter.createFixture(pl.Box(20.0, 0.25), 1.0);
+      /* originally above was:
+      teeter.createFixture(pl.Box(10.0, 0.25), 1.0);
+      */
+      world.createJoint(pl.RevoluteJoint({
+        lowerAngle: -18.0 * Math.PI / 180.0,
+        upperAngle: 45.0 * Math.PI / 180.0,
+        enableLimit: true
+      }, ground, teeter, teeter.getPosition()));
+
+      teeter.applyAngularImpulse(100.0, true);
+
+      // Teeter #2 SNF
+      var teeter = world.createDynamicBody(Vec2(220.0, 0.0));
+      teeter.createFixture(pl.Box(20.0, 0.25), 1.0);
+      world.createJoint(pl.RevoluteJoint({
+        lowerAngle: 0.0 * Math.PI / 180.0,
+        upperAngle: 45.0 * Math.PI / 180.0,
+        enableLimit: true
+      }, ground, teeter, teeter.getPosition()));
+
+      teeter.applyAngularImpulse(100.0, true);
+      // added 4/10/18 SNF
+      /*
+            var radius = 0.15;
+            var circleShape = pl.Circle(radius);
+            for (var i = 0; i < 100; ++i) {
+              var body = world.createDynamicBody(Vec2(i - 10, i * 100));
+              body.createFixture(circleShape, 10);
+            }
+            */
+      /*
+          var radius = 0.25;
+          var circleShapeMed = pl.Circle(radius);
+          for (var i = 0; i < 10; ++i) {
+            var body = world.createDynamicBody(Vec2(i - 10, i * 50));
+            body.createFixture(circleShapeMed, 10);
+          }
+          */
+      var radius = 0.0625;
+      for (var i = 0; i < 100; ++i) {
+        var circleShapeMed = pl.Circle(radius * i * 0.25);
+        var body = world.createDynamicBody(Vec2(3 * i, i * 40 * i));
+        body.createFixture(circleShapeMed, 10);
+      };
+      var radius = 0.02;
+      for (var i = 0; i < 100; ++i) {
+        var circleShapeMed = pl.Circle(radius * i);
+        var body = world.createDynamicBody(Vec2(300, 2100 + (i + i)));
+        body.createFixture(circleShapeMed, 10);
+      };
+
+      var shape = pl.Circle(1.0);
+
+      for (var i = 0; i < 10; ++i) {
+        let body = world.createDynamicBody(Vec2(190.0, 4.0 + 200));
+        body.createFixture(shape, 1.0);
+        body.setLinearVelocity(Vec2(0.0, -50.0));
+      }
+      var giantShape = pl.Circle(10.0);
+
+      for (var i = 0; i < 1; ++i) {
+        let body = world.createDynamicBody(Vec2(-18 + i, 4.0 + 300 * i));
+        body.createFixture(giantShape, 1.0);
+        body.setLinearVelocity(Vec2(0.0, -50.0));
+      }
+
+      // Bridge
+      var bridgeFD = {};
+      // bridgeFD.density = 1.0; // original
+      bridgeFD.density = bridgeDensity; // very springy
+      // bridgeFD.density = 0.1; // car almost passes through bridge ... like a cloud
+      // bridgeFD.friction = 0.6; // original
+      // bridgeFD.friction = 0.1; // too slippery
+      bridgeFD.friction = bridgeFriction; //
+
+      var prevBody = ground;
+      for (var i = 0; i < 20; ++i) {
+        var bridgeBlock = world.createDynamicBody(Vec2(161.0 + 2.0 * i, -0.125));
+        bridgeBlock.createFixture(pl.Box(1.0, 0.125), bridgeFD);
+
+        world.createJoint(pl.RevoluteJoint({}, prevBody, bridgeBlock, Vec2(160.0 + 2.0 * i, -0.125)));
+
+        prevBody = bridgeBlock;
+      }
+
+      world.createJoint(pl.RevoluteJoint({}, prevBody, ground, Vec2(160.0 + 2.0 * i, -0.125)));
+
+      // Boxes
+      var box = pl.Box(0.5, 0.5);
+      var sebbox1 = pl.Box(1.5, 1.5);
+      var sebbox2 = pl.Box(2.5, 2.5);
+      var sebbox3 = pl.Box(3.5, 3.5);
+      var sebbox4 = pl.Box(4.5, 4.5);
+      var sebbox5 = pl.Box(5.5, 5.5);
+      var sebbox10 = pl.Box(10, 10);
+      var sebbox8 = pl.Box(8, 8);
+
+      world.createDynamicBody(Vec2(230.0, 0.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(230.0, 1.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(230.0, 2.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(230.0, 3.5))
+        .createFixture(box, 0.5);
+      /*
+      * Sebastian added these blocks below
+      */
+      /*
+            let seVen = 7.0;
+            let fiVe = 5.0;
+            let thirTeen = 13.0;
+            let sevenTeen = 17.0;
+            let niNe = 9.0;
+            let oNe = 1.0;
+            let twenTyThree = 23.0;
+            let zeRo = 0.0;
+            var crank = world.createBody({
+                type: 'dynamic',
+                position: Vec2(zeRo, seVen)
+              });
+              crank.createFixture(pl.Box(0.25, 2.0), 2.0);
+      
+              var joint1 = world.createJoint(pl.RevoluteJoint({
+                motorSpeed: Math.PI,
+                maxMotorTorque: 10000.0,
+                enableMotor: true
+              }, ground, crank, Vec2(zeRo, fiVe)));
+      
+      
+              // Define follower.
+              var follower = world.createBody({
+                type: 'dynamic',
+                position: Vec2(zeRo, thirTeen)
+              });
+              follower.createFixture(pl.Box(0.25, 4.0), 2.0);
+      
+              world.createJoint(pl.RevoluteJoint({enableMotor: false}, crank, follower, Vec2(zeRo, niNe)));
+      
+      
+              // Define piston
+              var piston = world.createBody({
+                type: 'dynamic',
+                fixedRotation: true,
+                position: Vec2(zeRo, sevenTeen)
+              });
+              piston.createFixture(pl.Box(1.25, 1.5), 2.0);
+      
+              world.createJoint(pl.RevoluteJoint({}, follower, piston, Vec2(zeRo, sevenTeen)));
+      
+              var joint2 = world.createJoint(pl.PrismaticJoint({
+                maxMotorForce: 1000.0,
+                enableMotor: true
+              }, ground, piston, Vec2(zeRo, sevenTeen), Vec2(zeRo, oNe)));
+      
+      
+              // Create a payload
+              var payload = world.createBody({
+                type: 'dynamic',
+                position: Vec2(zeRo, twenTyThree)
+              });
+              payload.createFixture(pl.Box(1.25, 2.5), 2.0);
+      
+      */
+      testbed.keydown = function (code, char) {
+        switch (char) {
+          case 'Z':
+            joint2.enableMotor(!joint2.isMotorEnabled());
+            joint2.getBodyB().setAwake(true);
+            break;
+
+          case 'X':
+            joint1.enableMotor(!joint1.isMotorEnabled());
+            joint1.getBodyB().setAwake(true);
+            break;
+        }
+      };
+
+      testbed.step = function () {
+        var torque = joint1.getMotorTorque(1 / 60);
+        testbed.status("Motor Torque", torque);
+      };
+      world.createDynamicBody(Vec2(-5.0, 70.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 81.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 83.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 72.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 12.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 90.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-5.0, 86.5))
+        .createFixture(box, 0.5);
+
+      world.createDynamicBody(Vec2(-12.0, 155.5))
+        .createFixture(sebbox10, 10);
+
+      world.createDynamicBody(Vec2(220.0, 1305.5))
+        .createFixture(box, 10);
+      world.createDynamicBody(Vec2(220.0, 1310.5))
+        .createFixture(box, 10);
+      world.createDynamicBody(Vec2(220.0, 1315.5))
+        .createFixture(box, 10);
+      world.createDynamicBody(Vec2(220.0, 1425.5))
+        .createFixture(sebbox8, 10);
+
+      world.createDynamicBody(Vec2(-3.0, 225.5))
+        .createFixture(sebbox2, 0.5);
+
+      world.createDynamicBody(Vec2(-2.0, 250.5))
+        .createFixture(sebbox1, 0.5);
+
+      world.createDynamicBody(Vec2(-1.0, 202.5))
+        .createFixture(sebbox2, 0.5);
+
+      world.createDynamicBody(Vec2(0.0, 303.5))
+        .createFixture(sebbox3, 0.1);
+
+      world.createDynamicBody(Vec2(40.0, 200.5))
+        .createFixture(box, 5.5);
+
+      world.createDynamicBody(Vec2(40.0, 201.5))
+        .createFixture(box, 5.5);
+
+      world.createDynamicBody(Vec2(40.0, 202.5))
+        .createFixture(box, 5.5);
+
+      world.createDynamicBody(Vec2(40.0, 203.5))
+        .createFixture(box, 5.5);
+
+
+      // Car
+      var car = world.createDynamicBody(Vec2(0.0, 1.0));
+      car.createFixture(pl.Polygon([
+        Vec2(-1.5, -0.5),
+        Vec2(1.5, -0.5),
+        Vec2(1.5, 0.0),
+        Vec2(0.0, 0.9),
+        Vec2(-1.15, 0.9),
+        Vec2(-1.5, 0.2)
+      ]), 1.0);
+
+      var wheelFD = {};
+      wheelFD.density = 1.0;
+      wheelFD.friction = 0.9;
+
+      var wheelBack = world.createDynamicBody(Vec2(-1.0, 0.35));
+      wheelBack.createFixture(pl.Circle(0.4), wheelFD);
+
+      var wheelFront = world.createDynamicBody(Vec2(1.0, 0.4));
+      wheelFront.createFixture(pl.Circle(0.4), wheelFD);
+
+      var springBack = world.createJoint(pl.WheelJoint({
+        motorSpeed: 0.0,
+        maxMotorTorque: 20.0,
+        enableMotor: true,
+        frequencyHz: HZ,
+        dampingRatio: ZETA
+      }, car, wheelBack, wheelBack.getPosition(), Vec2(0.0, 1.0)));
+
+      var springFront = world.createJoint(pl.WheelJoint({
+        motorSpeed: 0.0,
+        maxMotorTorque: 10.0,
+        enableMotor: false,
+        frequencyHz: HZ,
+        dampingRatio: ZETA
+      }, car, wheelFront, wheelFront.getPosition(), Vec2(0.0, 1.0)));
+
+      testbed.keydown = function () {
+        if (testbed.activeKeys.down) {
+          HZ = Math.max(0.0, HZ - 1.0);
+          springBack.setSpringFrequencyHz(HZ);
+          springFront.setSpringFrequencyHz(HZ);
+
+        } else if (testbed.activeKeys.up) {
+          HZ += 1.0;
+          springBack.setSpringFrequencyHz(HZ);
+          springFront.setSpringFrequencyHz(HZ);
+        }
+      };
+
+      testbed.step = function () {
+        // testbed.drawPolygon(points, 'red');
+        if (testbed.activeKeys.right && testbed.activeKeys.left) {
+          springBack.setMotorSpeed(0);
+          springBack.enableMotor(true);
+
+        } else if (testbed.activeKeys.right) {
+          springBack.setMotorSpeed(-SPEED);
+          springBack.enableMotor(true);
+
+        } else if (testbed.activeKeys.left) {
+          springBack.setMotorSpeed(+SPEED);
+          springBack.enableMotor(true);
+
+        } else {
+          springBack.setMotorSpeed(0);
+          springBack.enableMotor(false);
+        }
+
+        var cp = car.getPosition();
+        if (cp.x > testbed.x + 10) {
+          testbed.x = cp.x - 10;
+
+        } else if (cp.x < testbed.x - 10) {
+          testbed.x = cp.x + 10;
+        }
+      };
+
+      // pauseButton.addEventListener('click', Stage.on(pause));
+      testbed.info(infoInstructions);
+
+      return world;
+    });
+
+  </script>
+</body>
+
+</html>
